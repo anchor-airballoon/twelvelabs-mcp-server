@@ -1,0 +1,44 @@
+{
+    "name": "@jine9323/twelvelabs",
+    "version": "1.0.0",
+    "description": "MCP server that connects to TwelveLabs video indexing and search APIs.",
+    "license": "MIT",
+    "author": "Your Company",
+    "type": "module",
+    "publishConfig": {
+        "access": "public"
+    },
+    "bin": {
+        "twelvelabs-video": "index.js"
+    },
+    "scripts": {
+        "build": "tsc",
+        "prepare": "npm run build",
+        "start": "node index.js"
+    },
+    "dependencies": {
+        "typescript": "^5.1.3",
+        "@modelcontextprotocol/sdk": "^1.0.1",
+        "node": "^20.19.0",
+        "node-fetch": "^3.3.2",
+        "@types/node": "^22.13.12"
+    },
+    "devDependencies": {
+        "typescript": "^5.1.3"
+    },
+    "main": "index.js",
+    "repository": {
+        "type": "git",
+        "url": "git+ssh://git@github.com/anchor-airballoon/twelvelabs-mcp-server.git"
+    },
+    "keywords": [
+        "mcp",
+        "video_understanding",
+        "12labs",
+        "twelvelabs"
+    ],
+    "bugs": {
+        "url": "https://github.com/anchor-airballoon/twelvelabs-mcp-server/issues"
+    },
+    "homepage": "https://github.com/anchor-airballoon/twelvelabs-mcp-server#readme"
+}
