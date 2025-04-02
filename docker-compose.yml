@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  twelvelabs-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - TWELVELABS_API_KEY=${TWELVELABS_API_KEY}
+    volumes:
+      - twelvelabs-mcp-data:/app/data
+
+volumes:
+  twelvelabs-mcp-data:
+    driver: local
+    driver_opts:
+      type: none
+      device: ${PWD}/data  # 호스트의 실제 경로로 변경 필요 

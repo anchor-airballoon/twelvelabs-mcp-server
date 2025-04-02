@@ -1,0 +1,25 @@
+# Smithery configuration file: https://smithery.ai/docs/config#smitheryyaml
+
+startCommand:
+  type: stdio
+  configSchema:
+    # JSON Schema defining the configuration options for the MCP.
+    type: object
+    properties:
+      apiKey:
+        type: string
+        description: TwelveLabs API Key for authentication
+        default: ""
+  commandFunction:
+    # A JS function that produces the CLI command based on the given config to start the MCP on stdio.
+    |-
+    (config) => { 
+      const args = ['index.js']; 
+      const env = {}; 
+      if (config.apiKey) { 
+        env.TWELVELABS_API_KEY = config.apiKey;
+      } 
+      return { command: 'node', args, env }; 
+    }
+  exampleConfig:
+    apiKey: "your_twelvelabs_api_key" 
