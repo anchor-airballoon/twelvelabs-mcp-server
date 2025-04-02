@@ -373,20 +373,20 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
     tools: [
       CREATE_INDEX_TOOL, 
       LIST_INDEXES_TOOL,
-      GET_INDEX_TOOL,
-      UPDATE_INDEX_TOOL,
-      DELETE_INDEX_TOOL,
+      // GET_INDEX_TOOL,
+      // UPDATE_INDEX_TOOL,
+      // DELETE_INDEX_TOOL,
       UPLOAD_VIDEOS_TOOL, 
-      IMPORT_VIDEOS_TOOL,
-      GET_IMPORT_STATUS_TOOL,
-      GET_IMPORT_LOGS_TOOL,
+      // IMPORT_VIDEOS_TOOL,
+      // GET_IMPORT_STATUS_TOOL,
+      // GET_IMPORT_LOGS_TOOL,
       LIST_TASKS_TOOL,
       GET_TASK_TOOL,
-      DELETE_TASK_TOOL,
-      SEARCH_VIDEOS_TOOL, 
+      // DELETE_TASK_TOOL,
+      // SEARCH_VIDEOS_TOOL, 
       GENERATE_TEXT_TOOL,
-      GENERATE_GIST_TOOL,
-      GENERATE_SUMMARY_TOOL
+      // GENERATE_GIST_TOOL,
+      // GENERATE_SUMMARY_TOOL
     ],
   };
 });
