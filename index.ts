@@ -23,7 +23,7 @@ import fetch from "node-fetch";
 // MCP 서버 생성
 const server = new Server(
   {
-    name: "twelvelabs-video-server",
+    name: "mcp-server-twelvelabs",
     version: "1.0.0",
   },
   {
