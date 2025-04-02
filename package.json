@@ -1,6 +1,6 @@
 {
     "name": "@jine9323/twelvelabs",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "MCP server that connects to TwelveLabs video indexing and search APIs.",
     "license": "MIT",
     "author": "Your Company",
