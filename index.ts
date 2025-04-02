@@ -34,7 +34,7 @@ const server = new Server(
 );
 
 // API Key 체크
-const TWELVELABS_API_KEY = process.env.TWELVELABS_API_KEY || "";
+const TWELVELABS_API_KEY = process.env.TWELVELABS_API_KEY || "tlk_1QP4ZEG05CGG1E2MJMMBG346W8AB";
 if (!TWELVELABS_API_KEY || TWELVELABS_API_KEY === "") {
   console.error("Error: TWELVELABS_API_KEY environment variable is required.");
   process.exit(1);
