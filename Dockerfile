@@ -13,7 +13,6 @@ COPY . .
 RUN npm run build
 
 # Ensure required environment variables are passed at runtime
-ENV TWELVELABS_API_KEY=""
 
 # Expose the MCP server on stdio
-CMD ["node", "index.js"]
+CMD ["node", "dist/index.js"]
