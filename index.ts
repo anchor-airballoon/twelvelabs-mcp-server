@@ -551,13 +551,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   }
 });
 
-// MCP 서버 실행
-async function runServer() {
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
-  console.error("TwelveLabs Video MCP Server running on stdio");
-}
-
 // 실제 TwelveLabs API 호출 부분
 async function createIndex(indexName: string) {
   try {
@@ -1342,6 +1335,12 @@ async function getImportLogs(integrationId: string) {
     console.error('임포트 로그 조회 중 오류:', error);
     throw error;
   }
+}
+
+async function runServer() {
+  const transport = new StdioServerTransport();
+  await server.connect(transport);
+  console.error("TwelveLabs Video MCP Server running on stdio");
 }
 
 runServer().catch((error) => {
