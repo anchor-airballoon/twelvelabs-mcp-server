@@ -14,7 +14,7 @@ startCommand:
     # A JS function that produces the CLI command based on the given config to start the MCP on stdio.
     |-
     (config) => { 
-      const args = ['index.js']; 
+      const args = ['dist/index.js']; 
       const env = {}; 
       if (config.apiKey) { 
         env.TWELVELABS_API_KEY = config.apiKey;
