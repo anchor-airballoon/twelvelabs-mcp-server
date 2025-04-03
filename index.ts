@@ -208,7 +208,7 @@ const UPLOAD_VIDEOS_TOOL: Tool = {
     type: "object",
     properties: {
       indexId: { type: "string", description: "Target index ID" },
-      url: { type: "string", description: "Direct URL to the video file (not YouTube)" },
+      url: { type: "string", description: "Direct URL to the raw video file (must be a direct file URL like .mp4, .mov, etc. - NOT supported: YouTube, Vimeo or other video platform URLs)" },
       filePath: { type: "string", description: "Local file path to the video (not implemented yet)" },
       enableVideoStream: { type: "boolean", description: "Enable video streaming (default: true)" }
     },
@@ -373,20 +373,20 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
     tools: [
       CREATE_INDEX_TOOL, 
       LIST_INDEXES_TOOL,
-      // GET_INDEX_TOOL,
-      // UPDATE_INDEX_TOOL,
-      // DELETE_INDEX_TOOL,
+      GET_INDEX_TOOL,
+      UPDATE_INDEX_TOOL,
+      DELETE_INDEX_TOOL,
       UPLOAD_VIDEOS_TOOL, 
-      // IMPORT_VIDEOS_TOOL,
-      // GET_IMPORT_STATUS_TOOL,
-      // GET_IMPORT_LOGS_TOOL,
+      IMPORT_VIDEOS_TOOL,
+      GET_IMPORT_STATUS_TOOL,
+      GET_IMPORT_LOGS_TOOL,
       LIST_TASKS_TOOL,
       GET_TASK_TOOL,
-      // DELETE_TASK_TOOL,
-      // SEARCH_VIDEOS_TOOL, 
+      DELETE_TASK_TOOL,
+      SEARCH_VIDEOS_TOOL, 
       GENERATE_TEXT_TOOL,
-      // GENERATE_GIST_TOOL,
-      // GENERATE_SUMMARY_TOOL
+      GENERATE_GIST_TOOL,
+      GENERATE_SUMMARY_TOOL
     ],
   };
 });
