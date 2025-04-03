@@ -34,7 +34,7 @@ const server = new Server(
 );
 
 // API Key 체크
-const TWELVELABS_API_KEY = process.env.TWELVELABS_API_KEY || "tlk_1QP4ZEG05CGG1E2MJMMBG346W8AB";
+const TWELVELABS_API_KEY = process.env.TWELVELABS_API_KEY || "";
 if (!TWELVELABS_API_KEY || TWELVELABS_API_KEY === "") {
   console.error("Error: TWELVELABS_API_KEY environment variable is required.");
   process.exit(1);
@@ -562,9 +562,13 @@ async function createIndex(indexName: string) {
       index_name: indexName,
       models: [
         {
-          model_name: "marengo2.7",
-          model_options: ["visual", "audio"]
-        }
+          name: "marengo2.7", // 문서 기반으로 모델 변경 (marengo2.7이 검색용)
+          options: ["visual", "audio"],
+        },
+        {
+          name: "pegasus1.2", // 문서 기반으로 모델 변경 (pegasus1.2가 텍스트 생성용)
+          options: ["visual", "audio"],
+        },
       ],
       addons: ["thumbnail"]
     };
