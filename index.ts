@@ -203,12 +203,13 @@ const UPLOAD_VIDEOS_TOOL: Tool = {
   name: "upload_videos",
   description:
     "Uploads videos to an existing TwelveLabs index from direct URLs or local file paths. " +
-    "Input: { indexId: string; url?: string; filePath?: string; enableVideoStream?: boolean }",
+    "Input: { indexId: string; url?: string; filePath?: string; enableVideoStream?: boolean } " +
+    "S3에서 업로드된 비디오 URL(https://<bucket>.s3.<region>.amazonaws.com/<filename>.mp4 형식)도 사용 가능합니다.",
   inputSchema: {
     type: "object",
     properties: {
       indexId: { type: "string", description: "Target index ID" },
-      url: { type: "string", description: "Direct URL to the raw video file (must be a direct file URL like .mp4, .mov, etc. - NOT supported: YouTube, Vimeo or other video platform URLs)" },
+      url: { type: "string", description: "Direct URL to the raw video file (must be a direct file URL like .mp4, .mov, etc. - NOT supported: YouTube, Vimeo or other video platform URLs). S3 URLs from upload_videos_s3 tool are supported: https://<bucket>.s3.<region>.amazonaws.com/<filename>.mp4" },
       filePath: { type: "string", description: "Local file path to the video (not implemented yet)" },
       enableVideoStream: { type: "boolean", description: "Enable video streaming (default: true)" }
     },
