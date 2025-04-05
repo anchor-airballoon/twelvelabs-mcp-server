@@ -99,13 +99,13 @@ const GET_INDEX_TOOL: Tool = {
   name: "get_index",
   description:
     "Retrieves details of a specific index. " +
-    "Input: { indexId: string }",
+    "Input: { indexName: string }",
   inputSchema: {
     type: "object",
     properties: {
-      indexId: { type: "string", description: "ID of the index to retrieve" }
+      indexName: { type: "string", description: "Name of the index to retrieve" }
     },
-    required: ["indexId"]
+    required: ["indexName"]
   }
 };
 
@@ -430,8 +430,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return { content: [{ type: "text", text: JSON.stringify(res, null, 2) }] };
       }
       case "get_index": {
-        const { indexId } = args as { indexId: string };
-        const res = await getIndex(indexId);
+        const { indexName } = args as { indexName: string };
+        const res = await getIndex(indexName);
         return { content: [{ type: "text", text: JSON.stringify(res, null, 2) }] };
       }
       case "update_index": {
@@ -832,9 +832,9 @@ async function listIndexes(
   }
 }
 
-async function getIndex(indexId: string) {
+async function getIndex(indexName: string) {
   try {
-    const url = `${BASE_URL}/indexes/${indexId}`;
+    const url = `${BASE_URL}/indexes?index_name=${indexName}`;
     
     const response = await fetch(url, {
       method: "GET",
