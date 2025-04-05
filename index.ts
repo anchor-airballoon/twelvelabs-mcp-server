@@ -44,14 +44,14 @@ if (!TWELVELABS_API_KEY || TWELVELABS_API_KEY === "") {
 const BASE_URL = "https://api.twelvelabs.io/v1.3";
 
 
-const models: { name: "pegasus1.2" | "marengo2.7"; options: ("visual" | "audio")[]; }[] = [
+const models: { model_name: "pegasus1.2" | "marengo2.7"; model_options: ("visual" | "audio")[]; }[] = [
   {
-    name: "marengo2.7", // 문서 기반으로 모델 변경 (marengo2.7이 검색용)
-    options: ["visual", "audio"],
+    model_name: "marengo2.7", // 문서 기반으로 모델 변경 (marengo2.7이 검색용)
+    model_options: ["visual", "audio"],
   },
   {
-    name: "pegasus1.2", // 문서 기반으로 모델 변경 (pegasus1.2가 텍스트 생성용)
-    options: ["visual", "audio"],
+    model_name: "pegasus1.2", // 문서 기반으로 모델 변경 (pegasus1.2가 텍스트 생성용)
+    model_options: ["visual", "audio"],
   },
 ];
 
@@ -570,12 +570,12 @@ async function createIndex(indexName: string) {
       index_name: indexName,
       models: [
         {
-          name: "marengo2.7", // 문서 기반으로 모델 변경 (marengo2.7이 검색용)
-          options: ["visual", "audio"],
+          model_name: "marengo2.7", // 문서 기반으로 모델 변경 (marengo2.7이 검색용)
+          model_options: ["visual", "audio"],
         },
         {
-          name: "pegasus1.2", // 문서 기반으로 모델 변경 (pegasus1.2가 텍스트 생성용)
-          options: ["visual", "audio"],
+          model_name: "pegasus1.2", // 문서 기반으로 모델 변경 (pegasus1.2가 텍스트 생성용)
+          model_options: ["visual", "audio"],
         },
       ],
       addons: ["thumbnail"]
@@ -591,7 +591,8 @@ async function createIndex(indexName: string) {
     });
     
     if (!response.ok) {
-      throw new Error(`인덱스 생성 실패: ${response.status}`);
+      const errorText = await response.text();
+      throw new Error(`인덱스 생성 실패: ${response.status}, 응답: ${errorText}`);
     }
     
     const result = await response.json() as any;
