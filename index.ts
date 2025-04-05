@@ -24,7 +24,7 @@ import fetch from "node-fetch";
 const server = new Server(
   {
     name: "mcp-server-twelvelabs",
-    version: "1.0.0",
+    version: "1.0.25",
   },
   {
     capabilities: {
