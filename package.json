@@ -1,6 +1,6 @@
 {
     "name": "mcp-server-twelvelabs",
-    "version": "1.0.13",
+    "version": "1.0.14",
     "description": "MCP server that connects to TwelveLabs video indexing and search APIs.",
     "license": "MIT",
     "author": "jine9323",
