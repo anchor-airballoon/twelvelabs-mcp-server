@@ -591,8 +591,7 @@ async function createIndex(indexName: string) {
     });
     
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`인덱스 생성 실패: ${response.status}, 응답: ${errorText}`);
+      throw new Error(`인덱스 생성 실패: ${response.status}`);
     }
     
     const result = await response.json() as any;
