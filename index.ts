@@ -277,7 +277,9 @@ const GENERATE_GIST_TOOL: Tool = {
     "Topic: Represents the central theme of a video for categorization. " +
     "Hashtag: Represents key themes for discoverability. " +
     "Input: { videoId: string; types: string[] } " +
-    "types: Array of 'title', 'topic', 'hashtag'",
+    "types: Array of 'title', 'topic', 'hashtag'. " +
+    "Returns: { id, title, topics, hashtags, usage } where title is a string, " +
+    "topics and hashtags are arrays of strings, and usage contains token information.",
   inputSchema: {
     type: "object",
     properties: {
@@ -1029,7 +1031,7 @@ async function generateGist(videoId: string, types: string[]) {
     // 엔드포인트 확인
     const url = `${BASE_URL}/gist`;
     
-    // 요청 본문 구성 - 문서 기반으로 정확한 필드 사용
+    // 요청 본문 구성 - API 문서 기반으로 정확한 필드 사용
     const body = {
       video_id: videoId,
       types: types
@@ -1064,11 +1066,13 @@ async function generateGist(videoId: string, types: string[]) {
     
     console.error(`Gist 생성 완료: ${videoId}, 응답 구조: ${Object.keys(result).join(", ")}`);
     
-    // API 문서 기반 필드 처리 - 응답에 id, data, usage 필드 포함됨
+    // API 문서 기반 필드 처리 - 응답은 id, title, topics, hashtags, usage를 직접 포함함
     return {
       status: 'success',
-      gist: result.data || {},
       id: result.id || "",
+      title: result.title || "",
+      topics: result.topics || [],
+      hashtags: result.hashtags || [],
       usage: result.usage || {},
       videoId
     };
