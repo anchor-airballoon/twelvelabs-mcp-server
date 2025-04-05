@@ -246,14 +246,15 @@ const SEARCH_VIDEOS_TOOL: Tool = {
 const GENERATE_TEXT_TOOL: Tool = {
   name: "generate_text",
   description:
-    "Generates text from a specified video. or just transcript or summarize" +
-    "Input: { videoId: string; mode?: string; prompt?: string; temperature?: number } " +
-    "mode: 'custom prompt",
+    "Generates open-ended texts from a specified video. " +
+    "Uses the /generate endpoint for maximum flexibility. " +
+    "Requires a clear prompt to guide the output. " +
+    "Can generate any text format: transcripts, tables, action items, analyses, etc. " +
+    "Input: { videoId: string; prompt?: string; temperature?: number }",
   inputSchema: {
     type: "object",
     properties: {
       videoId: { type: "string", description: "ID of the target video" },
-      mode: { type: "string", description: "transcript or summary", default: "transcript" },
       prompt: { type: "string", description: "Custom prompt for text generation (optional)" },
       temperature: { 
         type: "number", 
@@ -271,6 +272,10 @@ const GENERATE_GIST_TOOL: Tool = {
   name: "generate_gist",
   description:
     "Generates titles, topics, and hashtags for your videos. " +
+    "Uses the /gist endpoint for predefined formats. " +
+    "Title: Succinctly captures a video's main theme. " +
+    "Topic: Represents the central theme of a video for categorization. " +
+    "Hashtag: Represents key themes for discoverability. " +
     "Input: { videoId: string; types: string[] } " +
     "types: Array of 'title', 'topic', 'hashtag'",
   inputSchema: {
@@ -278,7 +283,7 @@ const GENERATE_GIST_TOOL: Tool = {
     properties: {
       videoId: { type: "string", description: "ID of the target video" },
       types: { 
-        type: "array",
+        type: "array", 
         items: { 
           type: "string", 
           enum: ["title", "topic", "hashtag"] 
@@ -294,6 +299,10 @@ const GENERATE_SUMMARY_TOOL: Tool = {
   name: "generate_summary",
   description:
     "Generates summaries, chapters, or highlights for your videos. " +
+    "Uses the /summarize endpoint. Allows customization with a prompt. " +
+    "Summary: Encapsulates key points of a video concisely. " +
+    "Chapter: Chronological list of all chapters with start/end times and descriptions. " +
+    "Highlight: Chronologically ordered list of important events with timestamps. " +
     "Input: { videoId: string; type: string; prompt?: string; temperature?: number } " +
     "type: 'summary', 'chapter', or 'highlight'",
   inputSchema: {
@@ -486,13 +495,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return { content: [{ type: "text", text: JSON.stringify(res, null, 2) }] };
       }
       case "generate_text": {
-        const { videoId, mode = "transcript", prompt, temperature = 0.2 } = args as { 
+        const { videoId, prompt, temperature = 0.2 } = args as { 
           videoId: string; 
-          mode?: string;
           prompt?: string;
           temperature?: number;
         };
-        const res = await generateTextFromVideo(videoId, mode, prompt, temperature);
+        const res = await generateTextFromVideo(videoId, prompt, temperature);
         return { content: [{ type: "text", text: JSON.stringify(res, null, 2) }] };
       }
       case "generate_gist": {
@@ -716,7 +724,7 @@ async function searchVideos(
   }
 }
 
-async function generateTextFromVideo(videoId: string, mode: string = "transcript", prompt?: string, temperature: number = 0.2) {
+async function generateTextFromVideo(videoId: string, prompt?: string, temperature: number = 0.2) {
   try {
     // 엔드포인트 확인
     const url = `${BASE_URL}/generate`;
@@ -724,13 +732,7 @@ async function generateTextFromVideo(videoId: string, mode: string = "transcript
     // 프롬프트 구성 (mode에 따라 다른 프롬프트 생성)
     let finalPrompt = prompt;
     if (!finalPrompt) {
-      if (mode === "transcript") {
-        finalPrompt = "Generate a complete transcript of this video in detail.";
-      } else if (mode === "summary") {
-        finalPrompt = "Generate a concise summary of this video highlighting the main points and key takeaways.";
-      } else {
-        finalPrompt = mode; // 사용자가 직접 제공한 mode를 프롬프트로 사용
-      }
+      finalPrompt = "Generate a detailed text based on this video.";
     }
     
     // 요청 본문 구성 - 문서 기반으로 정확한 필드 사용
@@ -777,7 +779,6 @@ async function generateTextFromVideo(videoId: string, mode: string = "transcript
       id: result.id || "",
       usage: result.usage || {},
       videoId,
-      mode,
       temperature // 응답에 사용된 temperature 값도 포함
     };
   } catch (error) {
@@ -912,7 +913,8 @@ async function deleteIndex(indexId: string) {
     
     return {
       status: 'success',
-      message: `인덱스 ID ${indexId}가 성공적으로 삭제되었습니다`
+      indexId: indexId,
+      message: "인덱스가 성공적으로 삭제되었습니다"
     };
   } catch (error) {
     console.error('인덱스 삭제 중 오류:', error);
@@ -936,15 +938,9 @@ async function listTasks(
     if (sortBy) queryParams.append('sort_by', sortBy);
     if (sortOption) queryParams.append('sort_option', sortOption);
     if (indexId) queryParams.append('index_id', indexId);
-    
-    // 여러 상태로 필터링
-    if (status && status.length > 0) {
-      status.forEach(s => queryParams.append('status', s));
-    }
+    if (status) queryParams.append('status', status.join(','));
 
     const url = `${BASE_URL}/tasks${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
-    
-    console.error(`태스크 목록 조회 요청: ${url}`);
     
     const response = await fetch(url, {
       method: "GET",
@@ -953,23 +949,11 @@ async function listTasks(
       }
     });
     
-    const responseText = await response.text();
-    console.error(`API 응답 상태: ${response.status}`);
-    
     if (!response.ok) {
-      console.error(`태스크 목록 조회 에러: ${responseText}`);
-      throw new Error(`태스크 목록 조회 실패: ${response.status}, 응답: ${responseText}`);
+      throw new Error(`태스크 목록 조회 실패: ${response.status}`);
     }
     
-    // 응답이 유효한 JSON인지 확인
-    let result;
-    try {
-      result = JSON.parse(responseText);
-    } catch (e) {
-      console.error(`JSON 파싱 오류: ${e}`);
-      throw new Error(`응답을 파싱할 수 없습니다: ${responseText}`);
-    }
-    
+    const result = await response.json() as any;
     console.error(`태스크 목록 조회 완료: ${result.data?.length || 0}개 태스크 찾음`);
     
     return {
@@ -995,42 +979,16 @@ async function getTask(taskId: string) {
       }
     });
     
-    const responseText = await response.text();
-    console.error(`태스크 조회 상태: ${response.status}`);
-    
     if (!response.ok) {
-      console.error(`태스크 조회 에러: ${responseText}`);
-      throw new Error(`태스크 조회 실패: ${response.status}, 응답: ${responseText}`);
+      throw new Error(`태스크 조회 실패: ${response.status}`);
     }
     
-    // 응답이 유효한 JSON인지 확인
-    let result;
-    try {
-      result = JSON.parse(responseText);
-    } catch (e) {
-      console.error(`JSON 파싱 오류: ${e}`);
-      throw new Error(`응답을 파싱할 수 없습니다: ${responseText}`);
-    }
-    
-    console.error(`태스크 조회 완료: id=${result._id}, status=${result.status}`);
-    
-    // 비디오 스트리밍 정보 포함
-    const hasStreaming = result.hls && result.hls.video_url;
+    const result = await response.json() as any;
+    console.error(`태스크 조회 완료: id=${result._id}`);
     
     return {
       status: 'success',
-      task: {
-        id: result._id,
-        createdAt: result.created_at,
-        updatedAt: result.updated_at,
-        indexId: result.index_id,
-        videoId: result.video_id,
-        status: result.status,
-        estimatedTime: result.estimated_time,
-        systemMetadata: result.system_metadata,
-        streamUrl: hasStreaming ? result.hls.video_url : null,
-        thumbnails: hasStreaming ? result.hls.thumbnail_urls : null
-      }
+      task: result
     };
   } catch (error) {
     console.error('태스크 조회 중 오류:', error);
@@ -1040,18 +998,7 @@ async function getTask(taskId: string) {
 
 async function deleteTask(taskId: string) {
   try {
-    // 먼저 태스크 상태 확인
-    const taskInfo = await getTask(taskId);
-    const taskStatus = taskInfo.task.status;
-    
-    // ready 또는 failed 상태가 아니면 삭제 불가
-    if (taskStatus !== 'ready' && taskStatus !== 'failed') {
-      throw new Error(`태스크 삭제 실패: '${taskStatus}' 상태의 태스크는 삭제할 수 없습니다. 삭제는 'ready' 또는 'failed' 상태에서만 가능합니다.`);
-    }
-    
     const url = `${BASE_URL}/tasks/${taskId}`;
-    
-    console.error(`태스크 삭제 요청: ${taskId}`);
     
     const response = await fetch(url, {
       method: "DELETE",
@@ -1060,12 +1007,8 @@ async function deleteTask(taskId: string) {
       }
     });
     
-    const responseText = await response.text();
-    console.error(`API 응답 상태: ${response.status}`);
-    
     if (!response.ok) {
-      console.error(`태스크 삭제 에러: ${responseText}`);
-      throw new Error(`태스크 삭제 실패: ${response.status}, 응답: ${responseText}`);
+      throw new Error(`태스크 삭제 실패: ${response.status}`);
     }
     
     console.error(`태스크 삭제 완료: id=${taskId}`);
@@ -1073,7 +1016,7 @@ async function deleteTask(taskId: string) {
     return {
       status: 'success',
       taskId: taskId,
-      message: `태스크 ID ${taskId}가 성공적으로 삭제되었습니다`
+      message: "태스크가 성공적으로 삭제되었습니다"
     };
   } catch (error) {
     console.error('태스크 삭제 중 오류:', error);
@@ -1081,14 +1024,15 @@ async function deleteTask(taskId: string) {
   }
 }
 
-// 추가 함수 - Gist 생성 (제목, 토픽, 해시태그)
 async function generateGist(videoId: string, types: string[]) {
   try {
+    // 엔드포인트 확인
     const url = `${BASE_URL}/gist`;
     
+    // 요청 본문 구성 - 문서 기반으로 정확한 필드 사용
     const body = {
       video_id: videoId,
-      types: types // 'title', 'topic', 'hashtag' 중 선택
+      types: types
     };
     
     console.error(`Gist 생성 요청: ${JSON.stringify(body)}`);
@@ -1103,7 +1047,7 @@ async function generateGist(videoId: string, types: string[]) {
     });
     
     const responseText = await response.text();
-    console.error(`API 응답 상태: ${response.status}, 응답 본문: ${responseText}`);
+    console.error(`API 응답 상태: ${response.status}, 응답 본문: ${responseText.substring(0, 500)}...`); // 응답 본문 일부만 로깅
     
     if (!response.ok) {
       throw new Error(`Gist 생성 실패: ${response.status}, 응답: ${responseText}`);
@@ -1120,12 +1064,11 @@ async function generateGist(videoId: string, types: string[]) {
     
     console.error(`Gist 생성 완료: ${videoId}, 응답 구조: ${Object.keys(result).join(", ")}`);
     
+    // API 문서 기반 필드 처리 - 응답에 id, data, usage 필드 포함됨
     return {
       status: 'success',
+      gist: result.data || {},
       id: result.id || "",
-      title: result.title || "",
-      topics: result.topics || [],
-      hashtags: result.hashtags || [],
       usage: result.usage || {},
       videoId
     };
@@ -1135,25 +1078,18 @@ async function generateGist(videoId: string, types: string[]) {
   }
 }
 
-// 추가 함수 - 요약, 챕터, 하이라이트 생성
-async function generateSummary(
-  videoId: string, 
-  type: string, 
-  prompt?: string, 
-  temperature: number = 0.2
-) {
+async function generateSummary(videoId: string, type: string, prompt?: string, temperature: number = 0.2) {
   try {
+    // 엔드포인트 확인
     const url = `${BASE_URL}/summarize`;
     
-    const body: any = {
+    // 요청 본문 구성 - 문서 기반으로 정확한 필드 사용
+    const body = {
       video_id: videoId,
-      type: type, // 'summary', 'chapter', 'highlight' 중 선택
-      temperature
+      type: type,
+      prompt: prompt,
+      temperature: temperature
     };
-    
-    if (prompt) {
-      body.prompt = prompt;
-    }
     
     console.error(`요약 생성 요청: ${JSON.stringify(body)}`);
     
@@ -1167,7 +1103,7 @@ async function generateSummary(
     });
     
     const responseText = await response.text();
-    console.error(`API 응답 상태: ${response.status}, 응답 본문: ${responseText}`);
+    console.error(`API 응답 상태: ${response.status}, 응답 본문: ${responseText.substring(0, 500)}...`); // 응답 본문 일부만 로깅
     
     if (!response.ok) {
       throw new Error(`요약 생성 실패: ${response.status}, 응답: ${responseText}`);
@@ -1184,13 +1120,15 @@ async function generateSummary(
     
     console.error(`요약 생성 완료: ${videoId}, 응답 구조: ${Object.keys(result).join(", ")}`);
     
+    // API 문서 기반 필드 처리 - 응답에 id, data, usage 필드 포함됨
     return {
       status: 'success',
+      summary: result.data || "",
       id: result.id || "",
-      data: result.data || {},
       usage: result.usage || {},
+      videoId,
       type,
-      videoId
+      temperature
     };
   } catch (error) {
     console.error('요약 생성 중 오류:', error);
@@ -1198,17 +1136,19 @@ async function generateSummary(
   }
 }
 
-// 새로운 함수들 추가
 async function importVideos(
-  integrationId: string, 
-  indexId: string, 
-  incrementalImport: boolean = true, 
+  integrationId: string,
+  indexId: string,
+  incrementalImport: boolean = true,
   retryFailed: boolean = false
 ) {
   try {
-    const url = `${BASE_URL}/tasks/transfers/import/${integrationId}`;
+    // 엔드포인트 확인
+    const url = `${BASE_URL}/import`;
     
+    // 요청 본문 구성 - 문서 기반으로 정확한 필드 사용
     const body = {
+      integration_id: integrationId,
       index_id: indexId,
       incremental_import: incrementalImport,
       retry_failed: retryFailed
@@ -1226,10 +1166,9 @@ async function importVideos(
     });
     
     const responseText = await response.text();
-    console.error(`API 응답 상태: ${response.status}`);
+    console.error(`API 응답 상태: ${response.status}, 응답 본문: ${responseText.substring(0, 500)}...`); // 응답 본문 일부만 로깅
     
     if (!response.ok) {
-      console.error(`비디오 임포트 에러: ${responseText}`);
       throw new Error(`비디오 임포트 실패: ${response.status}, 응답: ${responseText}`);
     }
     
@@ -1242,13 +1181,17 @@ async function importVideos(
       throw new Error(`응답을 파싱할 수 없습니다: ${responseText}`);
     }
     
-    console.error(`비디오 임포트 성공: ${result.videos?.length || 0}개 성공, ${result.failed_files?.length || 0}개 실패`);
+    console.error(`비디오 임포트 완료: ${integrationId}, ${indexId}, 응답 구조: ${Object.keys(result).join(", ")}`);
     
+    // API 문서 기반 필드 처리 - 응답에 id, data, usage 필드 포함됨
     return {
       status: 'success',
-      importedVideos: result.videos || [],
-      failedFiles: result.failed_files || [],
-      message: `${result.videos?.length || 0}개의 비디오 임포트 작업이 시작되었습니다.`
+      importId: result.id || "",
+      usage: result.usage || {},
+      integrationId,
+      indexId,
+      incrementalImport,
+      retryFailed
     };
   } catch (error) {
     console.error('비디오 임포트 중 오류:', error);
@@ -1258,9 +1201,19 @@ async function importVideos(
 
 async function getImportStatus(integrationId: string, indexId: string) {
   try {
-    const url = `${BASE_URL}/tasks/transfers/import/${integrationId}/status?index_id=${indexId}`;
+    // 엔드포인트 확인
+    const url = `${BASE_URL}/import/status`;
     
-    const response = await fetch(url, {
+    // 쿼리 파라미터 구성
+    const queryParams = new URLSearchParams();
+    queryParams.append('integration_id', integrationId);
+    queryParams.append('index_id', indexId);
+
+    const fullUrl = `${url}?${queryParams.toString()}`;
+    
+    console.error(`비디오 임포트 상태 조회 요청: ${fullUrl}`);
+    
+    const response = await fetch(fullUrl, {
       method: "GET",
       headers: {
         "x-api-key": TWELVELABS_API_KEY
@@ -1268,11 +1221,10 @@ async function getImportStatus(integrationId: string, indexId: string) {
     });
     
     const responseText = await response.text();
-    console.error(`API 응답 상태: ${response.status}`);
+    console.error(`API 응답 상태: ${response.status}, 응답 본문: ${responseText.substring(0, 500)}...`); // 응답 본문 일부만 로깅
     
     if (!response.ok) {
-      console.error(`임포트 상태 조회 에러: ${responseText}`);
-      throw new Error(`임포트 상태 조회 실패: ${response.status}, 응답: ${responseText}`);
+      throw new Error(`비디오 임포트 상태 조회 실패: ${response.status}, 응답: ${responseText}`);
     }
     
     // 응답이 유효한 JSON인지 확인
@@ -1284,29 +1236,35 @@ async function getImportStatus(integrationId: string, indexId: string) {
       throw new Error(`응답을 파싱할 수 없습니다: ${responseText}`);
     }
     
-    console.error(`임포트 상태 조회 성공`);
+    console.error(`비디오 임포트 상태 조회 완료: ${integrationId}, ${indexId}, 응답 구조: ${Object.keys(result).join(", ")}`);
     
+    // API 문서 기반 필드 처리 - 응답에 data 필드 포함됨
     return {
       status: 'success',
-      notImported: result.not_imported || [],
-      validating: result.validating || [],
-      pending: result.pending || [],
-      queued: result.queued || [],
-      indexing: result.indexing || [],
-      ready: result.ready || [],
-      failed: result.failed || []
+      importStatus: result.data || [],
+      integrationId,
+      indexId
     };
   } catch (error) {
-    console.error('임포트 상태 조회 중 오류:', error);
+    console.error('비디오 임포트 상태 조회 중 오류:', error);
     throw error;
   }
 }
 
 async function getImportLogs(integrationId: string) {
   try {
-    const url = `${BASE_URL}/tasks/transfers/import/${integrationId}/logs`;
+    // 엔드포인트 확인
+    const url = `${BASE_URL}/import/logs`;
     
-    const response = await fetch(url, {
+    // 쿼리 파라미터 구성
+    const queryParams = new URLSearchParams();
+    queryParams.append('integration_id', integrationId);
+
+    const fullUrl = `${url}?${queryParams.toString()}`;
+    
+    console.error(`비디오 임포트 로그 조회 요청: ${fullUrl}`);
+    
+    const response = await fetch(fullUrl, {
       method: "GET",
       headers: {
         "x-api-key": TWELVELABS_API_KEY
@@ -1314,11 +1272,10 @@ async function getImportLogs(integrationId: string) {
     });
     
     const responseText = await response.text();
-    console.error(`API 응답 상태: ${response.status}`);
+    console.error(`API 응답 상태: ${response.status}, 응답 본문: ${responseText.substring(0, 500)}...`); // 응답 본문 일부만 로깅
     
     if (!response.ok) {
-      console.error(`임포트 로그 조회 에러: ${responseText}`);
-      throw new Error(`임포트 로그 조회 실패: ${response.status}, 응답: ${responseText}`);
+      throw new Error(`비디오 임포트 로그 조회 실패: ${response.status}, 응답: ${responseText}`);
     }
     
     // 응답이 유효한 JSON인지 확인
@@ -1330,14 +1287,16 @@ async function getImportLogs(integrationId: string) {
       throw new Error(`응답을 파싱할 수 없습니다: ${responseText}`);
     }
     
-    console.error(`임포트 로그 조회 성공: ${result.data?.length || 0}개의 로그`);
+    console.error(`비디오 임포트 로그 조회 완료: ${integrationId}, 응답 구조: ${Object.keys(result).join(", ")}`);
     
+    // API 문서 기반 필드 처리 - 응답에 data 필드 포함됨
     return {
       status: 'success',
-      logs: result.data || []
+      importLogs: result.data || [],
+      integrationId
     };
   } catch (error) {
-    console.error('임포트 로그 조회 중 오류:', error);
+    console.error('비디오 임포트 로그 조회 중 오류:', error);
     throw error;
   }
 }
