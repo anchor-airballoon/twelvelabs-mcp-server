@@ -246,9 +246,9 @@ const SEARCH_VIDEOS_TOOL: Tool = {
 const GENERATE_TEXT_TOOL: Tool = {
   name: "generate_text",
   description:
-    "Generates text (transcription or summary) from a specified video. " +
+    "Generates text from a specified video. or just transcript or summarize" +
     "Input: { videoId: string; mode?: string; prompt?: string; temperature?: number } " +
-    "mode: 'transcript' or 'summary' (or custom prompt).",
+    "mode: 'custom prompt",
   inputSchema: {
     type: "object",
     properties: {
