@@ -306,7 +306,12 @@ const GENERATE_SUMMARY_TOOL: Tool = {
     "Chapter: Chronological list of all chapters with start/end times and descriptions. " +
     "Highlight: Chronologically ordered list of important events with timestamps. " +
     "Input: { videoId: string; type: string; prompt?: string; temperature?: number } " +
-    "type: 'summary', 'chapter', or 'highlight'",
+    "type: 'summary', 'chapter', or 'highlight'. " +
+    "Returns: Based on the type parameter: " +
+    "- For 'summary': { id, summary, usage } where summary is a concise text. " +
+    "- For 'chapter': { id, chapters, usage } where chapters is an array of objects with start, end, chapter, chapter_summary. " +
+    "- For 'highlight': { id, highlights, usage } where highlights is an array of objects with start, end, highlight, highlight_summary. " +
+    "The temperature parameter (0-1) controls text randomness, with higher values producing more creative output.",
   inputSchema: {
     type: "object",
     properties: {
@@ -318,11 +323,11 @@ const GENERATE_SUMMARY_TOOL: Tool = {
       },
       prompt: { 
         type: "string", 
-        description: "Optional prompt to guide the summarization" 
+        description: "Optional prompt to guide the summarization (e.g., 'Generate a summary for social media in two sentences')" 
       },
       temperature: { 
         type: "number", 
-        description: "Controls randomness (0.0-1.0)",
+        description: "Controls randomness (0.0-1.0), lower values for more deterministic output",
         minimum: 0,
         maximum: 1,
         default: 0.2
@@ -1087,7 +1092,7 @@ async function generateSummary(videoId: string, type: string, prompt?: string, t
     // 엔드포인트 확인
     const url = `${BASE_URL}/summarize`;
     
-    // 요청 본문 구성 - 문서 기반으로 정확한 필드 사용
+    // 요청 본문 구성 - API 문서 기반으로 정확한 필드 사용
     const body = {
       video_id: videoId,
       type: type,
@@ -1124,11 +1129,16 @@ async function generateSummary(videoId: string, type: string, prompt?: string, t
     
     console.error(`요약 생성 완료: ${videoId}, 응답 구조: ${Object.keys(result).join(", ")}`);
     
-    // API 문서 기반 필드 처리 - 응답에 id, data, usage 필드 포함됨
+    // API 문서 기반 필드 처리 - 반환 타입에 따라 다른 응답 구조를 가짐
     return {
       status: 'success',
-      summary: result.data || "",
       id: result.id || "",
+      // summary 타입인 경우 summary 필드 포함
+      summary: type === 'summary' ? result.summary || "" : undefined,
+      // chapter 타입인 경우 chapters 배열 포함
+      chapters: type === 'chapter' ? result.chapters || [] : undefined,
+      // highlight 타입인 경우 highlights 배열 포함
+      highlights: type === 'highlight' ? result.highlights || [] : undefined,
       usage: result.usage || {},
       videoId,
       type,
@@ -1315,3 +1325,4 @@ runServer().catch((error) => {
   console.error("Fatal error running server:", error);
   process.exit(1);
 });
+
